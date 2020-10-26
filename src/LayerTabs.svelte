@@ -14,21 +14,30 @@
     visible = 0;
   }
 
+  function move(amt) {
+    const layer = layers.splice(visible, 1);
+    visible += amt;
+    layers.splice(visible, 0, layer[0]);
+    save();
+  }
+
   function save() {
     layers = layers; // Force the thing that detects changes in layers to save
   }
 </script>
 
 <style>
+  #layersOutline {
+    outline: white inset 2px;
+    display: flex;
+  }
+
   #layers {
+    display: flex;
     height: 5vh;
     position: fixed;
     left: 0;
     top: 57vh;
-
-    outline: white inset 2px;
-
-    display: flex;
   }
 
   .layerSelect {
@@ -41,37 +50,49 @@
 
     margin: 0;
   }
+
+  .moveButton {
+    margin-left: 8px;
+  }
 </style>
 
 {#if visible !== null}
   <div id="layers">
-    {#each layers as layer, i}
+    <div id="layersOutline">
+      {#each layers as layer, i}
+        <div
+          style="background-color: {visible === i ? 'rgba(255, 0, 128, 0.2)' : 'black'}; left: {i * 5}vh"
+          class="layerSelect"
+          on:click={function () {
+            visible = i;
+          }}>
+          {i}
+        </div>
+      {/each}
       <div
-        style="background-color: {visible === i ? 'rgba(255, 0, 128, 0.2)' : 'black'}; left: {i * 5}vh"
         class="layerSelect"
         on:click={function () {
-          visible = i;
+          visible = layers.length;
+          layers.push({
+            seq: [],
+            alpha: 255,
+            type: 'switch',
+            blend: 'normal',
+            exp: 1,
+          });
+          setTimeout(() => {
+            layers[layers.length - 1].drawLoop();
+          }, 1);
         }}>
-        {i}
+        +
       </div>
-    {/each}
-    <div
-      class="layerSelect"
-      on:click={function () {
-        visible = layers.length;
-        layers.push({
-          seq: [],
-          alpha: 255,
-          type: 'switch',
-          blend: 'normal',
-          exp: 1,
-        });
-        setTimeout(() => {
-          layers[layers.length - 1].drawLoop();
-        }, 1);
-      }}>
-      +
     </div>
+    <input
+      type="button"
+      value="Move above"
+      on:click={() => move(-1)}
+      class="moveButton" />
+    <input type="button" value="Move below" on:click={() => move(1)} />
   </div>
 {/if}
 

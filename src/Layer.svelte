@@ -35,6 +35,8 @@
   onMount(function () {
     draw = c.getContext("2d");
 
+    console.log("oof");
+
     drawLoop();
   });
 
