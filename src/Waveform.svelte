@@ -108,6 +108,7 @@
 
         const toAdd = layer.getColor(timeStep);
         const a = (toAdd.a / 255) * (layer.alpha / 255);
+        console.log(i, layer.alpha);
         if (layer.blend === "normal") {
           const newC = {};
 

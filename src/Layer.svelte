@@ -331,8 +331,6 @@
       c.w = Math.min(255, c.w);
       c.a = Math.min(255, c.a);
 
-      console.log(c);
-
       return c;
     }
   }

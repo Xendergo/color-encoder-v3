@@ -51,7 +51,7 @@ app.ws("/ws", function (ws, req) {
         const msg = JSON.parse(msgStringy);
 
         if (msg.cmd === "color") {
-            if (status.commands.length < 5) {
+            if (status.commands.length < 2) {
                 color(msg.r, msg.g, msg.b, msg.w);
             }
         } else if (msg.cmd === "brightness") {
@@ -82,8 +82,8 @@ app.ws("/ws", function (ws, req) {
     })
 })
 
-app.listen(3000);
-console.log("Listening on port 3000");
+app.listen(8000);
+console.log("Listening on port 8000");
 
 
 const status = {

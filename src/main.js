@@ -1,5 +1,5 @@
 import App from './App.svelte';
-const socket = new WebSocket("ws://localhost:3000/ws");
+const socket = new WebSocket("ws://localhost:8000/ws");
 
 let app;
 socket.onopen = () => {

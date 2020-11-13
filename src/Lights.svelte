@@ -10,6 +10,15 @@
     a: 255,
   };
 
+  $: {
+    socket.send(
+      JSON.stringify({
+        cmd: "color",
+        ...color
+      })
+    );
+  }
+
   export let brightness = 32;
 
   $: {
