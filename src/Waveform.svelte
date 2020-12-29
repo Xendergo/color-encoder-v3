@@ -9,6 +9,8 @@
   export let allowRender;
   export let audio;
 
+  export let rendery;
+
   let layerTabs;
   export let layers = [];
 
@@ -93,64 +95,80 @@
     draw.stroke();
     draw.setLineDash([]);
 
-    if (audio.playing) {
-      let c = {
-        r: 0,
-        g: 0,
-        b: 0,
-        w: 0,
-      };
-
-      const timeStep = audio.time;
-
-      for (let i = layers.length - 1; i >= 0; i--) {
-        const layer = layers[i];
-
-        const toAdd = layer.getColor(timeStep);
-        const a = (toAdd.a / 255) * (layer.alpha / 255);
-        console.log(i, layer.alpha);
-        if (layer.blend === "normal") {
-          const newC = {};
-
-          newC.r = lerp(c.r, toAdd.r, a);
-          newC.g = lerp(c.g, toAdd.g, a);
-          newC.b = lerp(c.b, toAdd.b, a);
-          newC.w = lerp(c.w, toAdd.w, a);
-
-          c = newC;
-        } else if (layer.blend === "additive") {
-          c.r += toAdd.r * a;
-          c.g += toAdd.g * a;
-          c.b += toAdd.b * a;
-          c.w += toAdd.w * a;
-        } else if (layer.blend === "multiply") {
-          const newC = {};
-
-          newC.r = c.r * (toAdd.r / 255);
-          newC.g = c.g * (toAdd.g / 255);
-          newC.b = c.b * (toAdd.b / 255);
-          newC.w = c.w * (toAdd.w / 255);
-
-          c.r = lerp(c.r, newC.r, a);
-          c.g = lerp(c.g, newC.g, a);
-          c.b = lerp(c.b, newC.b, a);
-          c.w = lerp(c.w, newC.w, a);
-        }
-      }
-
-      c.r = Math.min(255, c.r);
-      c.g = Math.min(255, c.g);
-      c.b = Math.min(255, c.b);
-      c.w = Math.min(255, c.w);
-      c.a = Math.min(255, c.a);
-
-      socket.send(JSON.stringify({ cmd: "color", ...c }));
-    } else {
-      socket.send(JSON.stringify({ cmd: "color", ...color }));
-    }
-
     requestAnimationFrame(render);
   }
+
+  const intervalTime = 1000;
+  const times = 4;
+  const wait = intervalTime/(times+1);
+
+  onMount(() => {
+    setInterval(() => {
+      if (audio && audio.playing) {
+        const data = [];
+
+        for (let t = 0; t < times; t += 1) {
+          let c = {
+            r: 0,
+            g: 0,
+            b: 0,
+            w: 0,
+          };
+
+          const timeStep = audio.time + t*wait*audio.playbackSpeed;
+
+          for (let i = layers.length - 1; i >= 0; i--) {
+            const layer = layers[i];
+
+            const toAdd = layer.getColor(timeStep);
+            const a = (toAdd.a / 255) * (layer.alpha / 255);
+            if (layer.blend === "normal") {
+              const newC = {};
+
+              newC.r = lerp(c.r, toAdd.r, a);
+              newC.g = lerp(c.g, toAdd.g, a);
+              newC.b = lerp(c.b, toAdd.b, a);
+              newC.w = lerp(c.w, toAdd.w, a);
+
+              c = newC;
+            } else if (layer.blend === "additive") {
+              c.r += toAdd.r * a;
+              c.g += toAdd.g * a;
+              c.b += toAdd.b * a;
+              c.w += toAdd.w * a;
+            } else if (layer.blend === "multiply") {
+              const newC = {};
+
+              newC.r = c.r * (toAdd.r / 255);
+              newC.g = c.g * (toAdd.g / 255);
+              newC.b = c.b * (toAdd.b / 255);
+              newC.w = c.w * (toAdd.w / 255);
+
+              c.r = lerp(c.r, newC.r, a);
+              c.g = lerp(c.g, newC.g, a);
+              c.b = lerp(c.b, newC.b, a);
+              c.w = lerp(c.w, newC.w, a);
+            }
+          }
+
+          c.r = Math.min(255, c.r);
+          c.g = Math.min(255, c.g);
+          c.b = Math.min(255, c.b);
+          c.w = Math.min(255, c.w);
+          c.a = Math.min(255, c.a);
+
+          data.push(c.r);
+          data.push(c.g);
+          data.push(c.b);
+          data.push(c.w);
+        }
+
+        console.log(data[2]);
+
+        socket.send(JSON.stringify({ cmd: "color", c: data }));
+      }
+    }, intervalTime);
+  });
 
   function avg(index, j) {
     let v = 0;
@@ -185,7 +203,7 @@
   }
 </style>
 
-<LayerTabs {scale} {color} bind:this={layerTabs} bind:layers />
+<LayerTabs {scale} {color} bind:this={layerTabs} render={rendery} bind:layers />
 <canvas
   width={w}
   height={h}

@@ -12,9 +12,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@abandonware/noble": "^1.9.2-10",
     "express": "^4.17.1",
     "express-ws": "^4.0.0",
-    "serialport": "^9.0.2",
     "sirv-cli": "^1.0.0"
   },
   "devDependencies": {

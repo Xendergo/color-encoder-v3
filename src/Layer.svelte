@@ -20,6 +20,8 @@
   export let blend;
   export let exp;
 
+  export let render;
+
   export let save;
 
   export let visible;
@@ -51,7 +53,9 @@
     draw.fillStyle = "#000000";
     draw.fillRect(0, 0, w, h);
 
-    renderBackground();
+    if (render) {
+      renderBackground();
+    }
 
     draw.lineWidth = 2;
 
@@ -242,14 +246,16 @@
           audio.length * scale[0],
           audio.length * scale[1]
         );
-        for (let j = 0; j < seq.length && seq[j].t < t; j++) {
-          const c2 = seq[j].c;
-          const a = Math.E ** (((t - seq[j].t) / 1000) * -exp);
-          c.r += c2.r * (c2.a / 255) * a;
-          c.g += c2.g * (c2.a / 255) * a;
-          c.b += c2.b * (c2.a / 255) * a;
-          c.w += c2.w * (c2.a / 255) * a;
-          c.a += (c2.a / 255) * a;
+        for (let j = seq2.length - 1; j >= 0; j--) {
+          if (seq2[j].t < t) {
+            const c2 = seq2[j].c;
+            const a = Math.E ** (((t - seq2[j].t) / 1000) * -exp);
+            c.r += c2.r * (c2.a / 255) * a;
+            c.g += c2.g * (c2.a / 255) * a;
+            c.b += c2.b * (c2.a / 255) * a;
+            c.w += c2.w * (c2.a / 255) * a;
+            c.a += (c2.a / 255) * a * 255;
+          }
         }
 
         draw.strokeStyle = `rgba(${c.r}, ${c.g}, ${c.b}, ${c.a})`;
@@ -315,23 +321,19 @@
         a: 0,
       };
 
-      for (let j = 0; j < seq2.length && seq2[j].t < time; j++) {
-        const c2 = seq2[j].c;
-        const a = Math.E ** (((time - seq2[j].t) / 1000) * -exp);
-        c.r += c2.r * (c2.a / 255) * a;
-        c.g += c2.g * (c2.a / 255) * a;
-        c.b += c2.b * (c2.a / 255) * a;
-        c.w += c2.w * (c2.a / 255) * a;
-        c.a += (c2.a / 255) * a * 255;
+      for (let i = seq2.length - 1; i >= 0; i--) {
+        if (seq2[i].t < time) {
+          const c2 = seq2[i].c;
+          const a = Math.E ** (((time - seq2[i].t) / 1000) * -exp);
+          c.r += c2.r * (c2.a / 255) * a;
+          c.g += c2.g * (c2.a / 255) * a;
+          c.b += c2.b * (c2.a / 255) * a;
+          c.w += c2.w * (c2.a / 255) * a;
+          c.a += (c2.a / 255) * a * 255;
+          return c;
+        }
       }
 
-      c.r = Math.min(255, c.r);
-      c.g = Math.min(255, c.g);
-      c.b = Math.min(255, c.b);
-      c.w = Math.min(255, c.w);
-      c.a = Math.min(255, c.a);
-
-      return c;
     }
   }
 

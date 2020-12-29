@@ -9,6 +9,7 @@
   export let warning;
   export let audio;
   let allowRender;
+  let render;
   let layers = [];
 </script>
 
@@ -63,8 +64,8 @@
 
 <main>
   <div id="container">
-    <Lights {socket} bind:color bind:brightness bind:enable bind:warning />
+    <Lights {socket} bind:render bind:color bind:brightness bind:enable bind:warning />
     <Load {audio} {allowRender} bind:layers />
-    <Waveform bind:audio bind:allowRender bind:layers {color} {socket} />
+    <Waveform bind:audio bind:allowRender bind:layers {color} {socket} rendery={render}/>
   </div>
 </main>

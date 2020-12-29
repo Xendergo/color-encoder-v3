@@ -7,6 +7,8 @@
   export let scale;
   export let layers;
 
+  export let render
+
   let visible = null;
 
   export function startRender(audiot) {
@@ -102,6 +104,7 @@
     {save}
     seq={layer.seq}
     {color}
+    {render}
     bind:alpha={layer.alpha}
     bind:type={layer.type}
     bind:blend={layer.blend}

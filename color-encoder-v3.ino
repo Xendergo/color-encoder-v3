@@ -1,5 +1,19 @@
-int w = 7;
-int r = 8;
+
+#include <Arduino.h>
+#include <SPI.h>
+#include "Adafruit_BLE.h"
+#include "Adafruit_BluefruitLE_SPI.h"
+#include "Adafruit_BluefruitLE_UART.h"
+
+#include "BluefruitConfig.h"
+
+    #define MINIMUM_FIRMWARE_VERSION    "0.6.6"
+    #define MODE_LED_BEHAVIOUR          "MODE"
+
+Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
+
+int w = 6;
+int r = 5;
 int g = 10;
 int b = 9;
 int enablePin = 22;
@@ -18,9 +32,7 @@ float wb = 128;
 
 void setup()
 {
-  Serial.begin(9600); 
-  
-  pinMode(w, OUTPUT);
+   pinMode(w, OUTPUT);
   pinMode(r, OUTPUT);
   pinMode(g, OUTPUT);
   pinMode(b, OUTPUT);
@@ -30,51 +42,62 @@ void setup()
   delay(500);
   digitalWrite(warning, HIGH);
   disable();
-  Serial.print("start\n");
-//  delay(2000);
+  delay(2000);
   enable();
-//  writeColor(255, 0, 0, 0);
-//  delay(500);
-//  writeColor(0, 255, 0, 0);
-//  delay(500);
-//  writeColor(0, 0, 255, 0);
-//  delay(500);
-//  writeColor(0, 0, 0, 255);
+  writeColor(255, 0, 0, 0);
+  delay(500);
+  writeColor(0, 255, 0, 0);
+  delay(500);
+  writeColor(0, 0, 255, 0);
+  delay(500);
+  writeColor(0, 0, 0, 255);
+  delay(500);
+  
+  Serial.begin(115200);
+  
+  if (!ble.begin(true)) {
+    Serial.println("bluetooth is busted");
+  }
+  ble.echo(false);
+
+  ble.info();
+
+  ble.verbose(false);
+
+  /* Wait for connection */
+  while (! ble.isConnected()) {
+    float v = ((float) millis()) / 200000;
+    hslToRgb(v - floor(v));
+  }
+  
+  ble.setMode(BLUEFRUIT_MODE_DATA);
 //  delay(500);
 //  writeColor(255, 0, 255, 0);
-
-  Serial.print("ready\n");
 }
+
+int v[37];
+int vi = 0;
 
 void loop()
 {
-  // if (step < (sizeof(seq) / sizeof(int))/5.0) {
-  //   writeColor(seq[0+(step*5)], seq[1+(step*5)], seq[2+(step*5)], seq[3+(step*5)]);
-  //   delay((int)seq[4+(step*5)]);
-  //   step = step + 1;
-  // } else {
-  //   writeColor(0, 0, 0, 255);
-  // }
-
-  if (Serial.available() > 0) {
-     int v[4];
-
+  if (ble.available() > 0) {
+    Serial.println("rip");
+    
      int bitshift = 0;
      bool first = true;
      int c = 0;
      int index = 0;
 
-     while (Serial.available() > 0) {
+     while (ble.available() > 0) {
        if (first) {
          first = false;
-         c = Serial.read();
+         c = ble.read();
        } else {
-        v[index] = Serial.read();
+        v[index] = ble.read();
+        Serial.println(v[index]);
         
         index++;
        }
-
-       delay(2);
      }
 
      if (c == 0) {
@@ -99,16 +122,45 @@ void loop()
        
        writeColor(rp, gp, bp, wp);
      } else {
-       rp = v[0];
-       gp = v[1];
-       bp = v[2];
-       wp = v[3];
-
-       writeColor(rp, gp, bp, wp);
+       vi = 0;
      }
-
-     Serial.print("r\n");
   }
+  
+  if (vi == 16) {
+    vi += 4;
+  } else if (vi < 16) {
+    rp = v[vi+0];
+    gp = v[vi+1];
+    bp = v[vi+2];
+    wp = v[vi+3];
+
+    Serial.print(rp);
+    Serial.print(gp);
+    Serial.print(bp);
+    Serial.println(wp);
+    
+    writeColor(rp, gp, bp, wp);
+
+    vi += 4;
+  }
+  delay(200);
+}
+
+float hue2rgb(float t) {
+  if(t < 0) t += 1;
+  if(t > 1) t -= 1;
+  if(t < (1.0/6.0)) return 6 * t;
+  if(t < (1.0/2.0)) return 1;
+  if(t < (2.0/3.0)) return (2.0/3.0 - t) * 6;
+  return 0;
+}
+
+void hslToRgb(float h){
+    float r = hue2rgb(h + (1.0/3.0));
+    float g = hue2rgb(h);
+    float b = hue2rgb(h - (1.0/3.0));
+
+    writeColor(r * 255.0, g * 255.0, b * 255.0, 0);
 }
 
 void enable() {
@@ -131,7 +183,7 @@ void disable() {
   digitalWrite(enablePin, LOW);
 }
 
-void writeColor(int ri, int gi, int bi, int wi)
+void writeColor(float ri, float gi, float bi, float wi)
 {
   analogWrite(r, sq(ri/255.0)*(brightness/255.0*(rb/255))*255);
   analogWrite(g, sq(gi/255.0)*(brightness/255.0*(gb/255))*255);

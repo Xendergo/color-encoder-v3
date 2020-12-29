@@ -2,6 +2,9 @@
   export let socket;
   import Slider from "./Slider.svelte";
   import Checkbox from "./Checkbox.svelte";
+
+  export let render;
+
   export let color = {
     r: 255,
     g: 0,
@@ -11,10 +14,11 @@
   };
 
   $: {
+    const cArray = [color.r, color.g, color.b, color.w];
     socket.send(
       JSON.stringify({
         cmd: "color",
-        ...color
+        c: [...cArray, ...cArray, ...cArray, ...cArray]
       })
     );
   }
@@ -77,4 +81,5 @@
     color="rgb({color.w}, {color.w}, {color.w})" /><br />
   <Checkbox bind:value={enable} label="Enabled" />
   <Checkbox bind:value={warning} label="Warning" />
+  <Checkbox bind:value={render} label="Render" />
 </div>
